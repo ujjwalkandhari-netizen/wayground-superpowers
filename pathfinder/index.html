@@ -21,7 +21,12 @@
   .kicker { color: #FF319F; font-weight: 800; letter-spacing: 1px; font-size: 14px; margin-top: 24px; }
   h1 { font-size: 44px; margin: 8px 0; font-weight: 800; }
   p { font-size: 20px; line-height: 1.5; }
-  a.btn { display: inline-block; margin-top: 16px; padding: 12px 22px; border-radius: 10px; background: #FF319F; color: #fff; text-decoration: none; font-weight: 700; }
+  button, a.btn { display: inline-block; margin-top: 12px; padding: 14px 24px; border: 0; border-radius: 10px; font: 700 18px "Avenir Next", Avenir, Arial, sans-serif; cursor: pointer; text-decoration: none; }
+  #share { background: #FF319F; color: #fff; width: 100%; max-width: 360px; font-size: 20px; }
+  #copy { background: transparent; color: #3B142A; border: 2px solid #3B142A; padding: 10px 18px; font-size: 16px; }
+  a.btn { background: transparent; color: #FF319F; padding: 8px 0; font-size: 16px; }
+  .caption { background: #fff; border-radius: 10px; padding: 14px; margin-top: 20px; font-size: 16px; line-height: 1.5; text-align: left; }
+  .note { font-size: 15px; min-height: 1.5em; margin: 10px 0 0; }
 </style>
 </head>
 <body>
@@ -30,7 +35,44 @@
   <div class="kicker">MY TEACHING SUPERPOWER</div>
   <h1>Pathfinder</h1>
   <p>Reads the data, sets the course</p>
-  <a class="btn" href="https://wayground.com">Discover Wayground</a>
+  <button id="share" type="button">Share my badge</button>
+  <p class="note" id="note">Opens LinkedIn, Facebook, Instagram or WhatsApp with your badge image attached.</p>
+  <div class="caption"><span id="caption">My teaching superpower is Pathfinder: Reads the data, sets the course. What&#x27;s yours? Find out at wayground.com #TeachingSuperpower #Wayground</span></div>
+  <button id="copy" type="button">Copy caption</button>
+  <br><a class="btn" href="https://wayground.com">Discover Wayground</a>
 </main>
+<script>
+  // The image is fetched up front so the tap goes straight to the share sheet (iOS rejects a share that waits on a download).
+  const caption = document.getElementById('caption').textContent;
+  const note = document.getElementById('note');
+  let file = null;
+  fetch('post.png').then(r => r.blob())
+    .then(b => { file = new File([b], "wayground-pathfinder-superpower.png", { type: 'image/png' }); })
+    .catch(() => {});
+
+  function download() {
+    const a = document.createElement('a');
+    a.href = 'post.png';
+    a.download = "wayground-pathfinder-superpower.png";
+    document.body.appendChild(a); a.click(); a.remove();
+    note.textContent = 'Badge image downloaded. Add it to a new post and paste the caption below.';
+  }
+
+  document.getElementById('share').addEventListener('click', () => {
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], text: caption })
+        .then(() => { note.textContent = 'Shared. Thank you!'; })
+        .catch(err => { if (err.name !== 'AbortError') download(); });
+    } else {
+      download();   // laptops and older phones
+    }
+  });
+
+  document.getElementById('copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(caption)
+      .then(() => { note.textContent = 'Caption copied. Paste it into your post.'; })
+      .catch(() => { note.textContent = 'Select the caption above and copy it.'; });
+  });
+</script>
 </body>
 </html>
